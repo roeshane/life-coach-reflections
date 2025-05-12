@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Coach } from "@/components/Coach";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface JournalData {
   date: string;
@@ -18,6 +19,7 @@ interface JournalData {
 const Coaching = () => {
   const [journalData, setJournalData] = useState<JournalData | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,8 +41,29 @@ const Coaching = () => {
     const savedApiKey = localStorage.getItem("geminiApiKey");
     if (savedApiKey) {
       setApiKey(savedApiKey);
+    } else {
+      setIsEditing(true); // API 키가 없으면 입력 폼 표시
     }
   }, [navigate, toast]);
+
+  const handleSaveApiKey = () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API 키 필요",
+        description: "Gemini API 키를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    localStorage.setItem("geminiApiKey", apiKey);
+    setIsEditing(false);
+    
+    toast({
+      title: "API 키 저장됨",
+      description: "Gemini API 키가 성공적으로 저장되었습니다.",
+    });
+  };
 
   const coaches = [
     {
@@ -94,6 +117,48 @@ const Coaching = () => {
           <h1 className="text-3xl font-bold">라이프 코치 조언</h1>
           <p className="text-muted-foreground">{journalData.date}</p>
         </div>
+
+        {/* API 키 입력 섹션 */}
+        <Card className="mb-8 overflow-hidden border border-border/40">
+          <CardHeader className="bg-muted/50 px-6 py-4">
+            <CardTitle className="text-lg">Gemini API 설정</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="apiKey">Gemini API 키</Label>
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    placeholder="API 키를 입력하세요"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <a 
+                      href="https://aistudio.google.com/app/apikey" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      Gemini API 키는 여기서 얻을 수 있습니다
+                    </a>
+                  </p>
+                </div>
+                <Button onClick={handleSaveApiKey}>저장</Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm">API 키가 설정되었습니다.</p>
+                  <p className="text-xs text-muted-foreground">API 키: ••••••••{apiKey.slice(-4)}</p>
+                </div>
+                <Button variant="outline" onClick={() => setIsEditing(true)}>변경</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="mb-8">
           <Card className="bg-secondary/40">

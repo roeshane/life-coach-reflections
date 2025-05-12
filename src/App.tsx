@@ -7,21 +7,43 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Journal from "./pages/Journal";
 import Coaching from "./pages/Coaching";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import Header from "./components/Header";
+import { AuthProvider } from "./hooks/useAuth";
+import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Journal />} />
-          <Route path="/coaching" element={<Coaching />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Header />
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route 
+              path="/" 
+              element={
+                <AuthGuard>
+                  <Journal />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/coaching" 
+              element={
+                <AuthGuard>
+                  <Coaching />
+                </AuthGuard>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

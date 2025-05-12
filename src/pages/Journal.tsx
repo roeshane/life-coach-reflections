@@ -1,11 +1,13 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Journal = () => {
   const [journalEntry, setJournalEntry] = useState("");
@@ -13,9 +15,10 @@ const Journal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const currentDate = format(new Date(), "yyyy년 MM월 dd일");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!journalEntry.trim() || !reflection.trim()) {
@@ -29,18 +32,35 @@ const Journal = () => {
 
     setIsLoading(true);
     
-    // Store journal data in sessionStorage to pass to coaching page
-    sessionStorage.setItem("journalData", JSON.stringify({
-      date: currentDate,
-      journal: journalEntry,
-      reflection: reflection,
-    }));
-    
-    // Simulate loading for better UX
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // 저널 데이터를 Supabase에 저장
+      const { error } = await supabase.from('journals').insert({
+        user_id: user?.id,
+        journal_text: journalEntry,
+        reflection_text: reflection
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+      // 로컬 세션 스토리지에도 저장 (코칭 페이지에서 사용)
+      sessionStorage.setItem("journalData", JSON.stringify({
+        date: currentDate,
+        journal: journalEntry,
+        reflection: reflection,
+      }));
+      
       navigate("/coaching");
-    }, 800);
+    } catch (error: any) {
+      toast({
+        title: "저장 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

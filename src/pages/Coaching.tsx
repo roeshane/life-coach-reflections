@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Coach } from "@/components/Coach";
+import { Input } from "@/components/ui/input";
 
 interface JournalData {
   date: string;
@@ -17,7 +18,6 @@ interface JournalData {
 const Coaching = () => {
   const [journalData, setJournalData] = useState<JournalData | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
-  const [showApiInput, setShowApiInput] = useState<boolean>(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,25 +39,8 @@ const Coaching = () => {
     const savedApiKey = localStorage.getItem("geminiApiKey");
     if (savedApiKey) {
       setApiKey(savedApiKey);
-    } else {
-      setShowApiInput(true);
     }
   }, [navigate, toast]);
-
-  const handleApiKeySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!apiKey.trim()) {
-      toast({
-        title: "API 키 필요",
-        description: "Gemini API 키를 입력해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    localStorage.setItem("geminiApiKey", apiKey);
-    setShowApiInput(false);
-  };
 
   const coaches = [
     {
@@ -92,43 +75,8 @@ const Coaching = () => {
     },
   ];
 
-  if (showApiInput) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Gemini API 키 입력</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleApiKeySubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="api-key" className="text-sm font-medium">
-                  Gemini API 키
-                </label>
-                <input
-                  id="api-key"
-                  type="password"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  placeholder="Gemini API 키를 입력하세요"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  API 키는 로컬에만 저장되며 서버로 전송되지 않습니다.
-                </p>
-              </div>
-              <Button type="submit" className="w-full">
-                저장
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (!journalData) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">로딩 중...</div>;
   }
 
   return (
